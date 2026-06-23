@@ -14,8 +14,8 @@
                     <form:SimpleForm
                         editable="true"
                         layout="ResponsiveGridLayout"
-                        labelSpanXL="2" labelSpanL="2" labelSpanM="3" labelSpanS="12"
-                        emptySpanXL="6" emptySpanL="6" emptySpanM="4" emptySpanS="0"
+                        labelSpanXL="3" labelSpanL="3" labelSpanM="3" labelSpanS="12"
+                        emptySpanXL="4" emptySpanL="4" emptySpanM="4" emptySpanS="0"
                         columnsXL="1" columnsL="1" columnsM="1">
                         <form:content>
                             <Label text="{i18n>warehouseNumber}" required="true" />
@@ -24,35 +24,37 @@
                                 value="{local>/warehouseNumber}"
                                 placeholder="{i18n>warehousePlaceholder}"
                                 maxLength="4"
-                                class="warehouseInput" />
+                                width="8rem" />
                         </form:content>
                     </form:SimpleForm>
                 </content>
             </Panel>
 
             <!-- Scan Inputs -->
-            <Panel class="sapUiSmallMarginBottom">
+            <Panel headerText="{i18n>scanInputs}" class="sapUiSmallMarginBottom">
                 <content>
                     <form:SimpleForm
                         editable="true"
                         layout="ResponsiveGridLayout"
-                        labelSpanXL="2" labelSpanL="2" labelSpanM="3" labelSpanS="12"
-                        emptySpanXL="2" emptySpanL="2" emptySpanM="0" emptySpanS="0"
-                        columnsXL="2" columnsL="2" columnsM="2">
+                        labelSpanXL="3" labelSpanL="3" labelSpanM="3" labelSpanS="12"
+                        emptySpanXL="4" emptySpanL="4" emptySpanM="4" emptySpanS="0"
+                        columnsXL="1" columnsL="1" columnsM="1">
                         <form:content>
-                            <Label text="{i18n>serialNumber}" />
+                            <Label text="{i18n>serialNumberEngine}" />
                             <Input
                                 id="inputEngine"
                                 value="{local>/scanEngine}"
-                                placeholder="Scan engine barcode"
-                                submit="onEngineScan" />
-                            <Label text="{i18n>frameNumber}" />
+                                placeholder="{i18n>scanEnginePlaceholder}"
+                                submit="onEngineScan"
+                                change="onEngineScan" />
+                            <Label text="{i18n>uiiFrame}" />
                             <Input
                                 id="inputFrame"
                                 value="{local>/scanFrame}"
                                 enabled="{= ${local>/lastEngine} !== '' }"
-                                placeholder="Scan frame barcode"
-                                submit="onFrameScan" />
+                                placeholder="{i18n>scanFramePlaceholder}"
+                                submit="onFrameScan"
+                                change="onFrameScan" />
                         </form:content>
                     </form:SimpleForm>
                 </content>
@@ -62,33 +64,42 @@
             <Table
                 id="scannedItemsTable"
                 items="{local>/scannedItems}"
+                mode="SingleSelectLeft"
                 growing="true"
                 growingThreshold="50"
+                alternateRowColors="true"
+                sticky="ColumnHeaders"
                 noDataText="No items scanned yet.">
                 <headerToolbar>
                     <OverflowToolbar>
-                        <Title text="Scanned Items ({= ${local>/scannedItems}.length })" level="H5" />
+                        <Title text="{i18n>scannedItems}" level="H3" />
+                        <ToolbarSpacer />
+                        <Button
+                            text="{i18n>clear}"
+                            icon="sap-icon://eraser"
+                            press="onDeleteItem" />
                     </OverflowToolbar>
                 </headerToolbar>
                 <columns>
-                    <Column width="3rem"><Text text="{i18n>colNo}" /></Column>
+                    <Column width="4em"><Text text="{i18n>colNo}" /></Column>
                     <Column><Text text="{i18n>colMaterial}" /></Column>
                     <Column><Text text="{i18n>colDescription}" /></Column>
                     <Column><Text text="{i18n>colSerialNumber}" /></Column>
-                    <Column><Text text="{i18n>colFrameNumber}" /></Column>
-                    <Column width="5rem" hAlign="Center"><Text text="{i18n>colStatus}" /></Column>
+                    <Column><Text text="{i18n>colUii}" /></Column>
+                    <Column width="6em" hAlign="Center"><Text text="{i18n>colStatus}" /></Column>
                 </columns>
                 <items>
-                    <ColumnListItem>
+                    <ColumnListItem type="Inactive">
                         <cells>
                             <Text text="{local>No}" />
                             <Text text="{local>Material}" />
                             <Text text="{local>MaterialDesc}" />
                             <Text text="{local>SerialNumber}" />
                             <Text text="{local>FrameNumber}" />
-                            <ObjectStatus
-                                text="{local>Status}"
-                                state="{= ${local>Status} === 'OK' ? 'Success' : 'Error' }" />
+                            <core:Icon
+                                src="sap-icon://accept"
+                                color="Positive"
+                                size="1.2rem" />
                         </cells>
                     </ColumnListItem>
                 </items>
@@ -96,19 +107,15 @@
 
         </content>
 
-        <!-- Footer Toolbar: Clear + Post -->
+        <!-- Footer: Post -->
         <footer>
             <OverflowToolbar>
-                <Button
-                    text="{i18n>btnClear}"
-                    type="Default"
-                    press="onClear" />
                 <ToolbarSpacer />
                 <Button
-                    text="{i18n>btnPost}"
+                    text="{i18n>post}"
+                    icon="sap-icon://shipping-status"
                     type="Emphasized"
-                    press="onPost"
-                    enabled="{= ${local>/scannedItems}.length > 0 }" />
+                    press="onPost" />
             </OverflowToolbar>
         </footer>
     </Page>

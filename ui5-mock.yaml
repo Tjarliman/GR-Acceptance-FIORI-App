@@ -1,22 +1,31 @@
-specVersion: "3.0"
+specVersion: "4.0"
 metadata:
   name: zmm.gracceptance
 type: application
 server:
   customMiddleware:
-    - name: sap-fe-mockserver
-      beforeMiddleware: fiori-tools-proxy
-      configuration:
-        service:
-          - urlBasePath: /sap/opu/odata4/sap/zmmsb_gracceptance/srvd/sap/zmmsd_gracceptance/0001
-            metadataXmlPath: ./webapp/localService/mainService/metadata.xml
-            generateMockData: true
     - name: fiori-tools-proxy
       afterMiddleware: compression
       configuration:
-        ignoreCertError: true
+        ignoreCertErrors: true
+        ui5:
+          path:
+            - /resources
+            - /test-resources
+          url: https://ui5.sap.com
     - name: fiori-tools-appreload
       afterMiddleware: compression
       configuration:
         port: 35729
         path: webapp
+        delay: 300
+    - name: sap-fe-mockserver
+      beforeMiddleware: csp
+      configuration:
+        mountPath: /
+        services:
+          - urlPath: /sap/opu/odata4/sap/zmmsb_gracceptance/srvd/sap/zmmsd_gracceptance/0001
+            metadataPath: ./webapp/localService/mainService/metadata.xml
+            mockdataPath: ./webapp/localService/mainService/data
+            generateMockData: true
+        annotations: []

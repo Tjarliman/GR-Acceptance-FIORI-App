@@ -52,8 +52,9 @@ sap.ui.define([
                 this._oLocalModel.setProperty("/lastMaterial", oData.Material);
                 this._oLocalModel.setProperty("/lastMaterialDesc", oData.MaterialDesc);
 
-                this._oLocalModel.setProperty("/scanEngine", "");
-                this.byId("inputFrame").focus();
+                setTimeout(function () {
+                    this.byId("inputFrame").focus();
+                }.bind(this), 100);
             }.bind(this)).catch(function (oError) {
                 this._oLocalModel.setProperty("/busy", false);
                 MessageBox.error(this._getText("msgEngineLookupFailed") + "\n" + (oError.message || ""));
@@ -87,6 +88,7 @@ sap.ui.define([
             });
 
             this._oLocalModel.setProperty("/scannedItems", aItems);
+            this._oLocalModel.setProperty("/scanEngine", "");
             this._oLocalModel.setProperty("/scanFrame", "");
             this._oLocalModel.setProperty("/lastEngine", "");
             this._oLocalModel.setProperty("/lastMaterial", "");
@@ -96,22 +98,27 @@ sap.ui.define([
             this.byId("inputEngine").focus();
         },
 
-        // ─── Clear ─────────────────────────────────────────────────────
-        onClear: function () {
-            var aItems = this._oLocalModel.getProperty("/scannedItems") || [];
-            if (aItems.length === 0) {
+        // ─── Delete Selected Item ────────────────────────────────────
+        onDeleteItem: function () {
+            var oTable = this.byId("scannedItemsTable");
+            var oSelectedItem = oTable.getSelectedItem();
+
+            if (!oSelectedItem) {
+                MessageBox.warning(this._getText("selectItemToDelete"));
                 return;
             }
-            MessageBox.confirm(this._getText("msgConfirmClear"), {
-                onClose: function (sAction) {
-                    if (sAction === MessageBox.Action.OK) {
-                        this._oLocalModel.setProperty("/scannedItems", []);
-                        this._oLocalModel.setProperty("/lastEngine", "");
-                        this._oLocalModel.setProperty("/scanEngine", "");
-                        this._oLocalModel.setProperty("/scanFrame", "");
-                    }
-                }.bind(this)
-            });
+
+            var sPath = oSelectedItem.getBindingContext("local").getPath();
+            var iIndex = parseInt(sPath.split("/").pop(), 10);
+            var aItems = this._oLocalModel.getProperty("/scannedItems").slice();
+
+            aItems.splice(iIndex, 1);
+            for (var i = 0; i < aItems.length; i++) {
+                aItems[i].No = i + 1;
+            }
+            this._oLocalModel.setProperty("/scannedItems", aItems);
+            oTable.removeSelections(true);
+            MessageToast.show(this._getText("msgItemDeleted"));
         },
 
         // ─── Post Goods Movement 301 ───────────────────────────────────

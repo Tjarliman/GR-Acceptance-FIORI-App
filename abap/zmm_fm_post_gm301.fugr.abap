@@ -21,6 +21,15 @@
 *   SerialNumber - engine serial number
 *   Uii          - frame number (UII)
 *
+* Items are GROUPED BY MATERIAL: one goods-movement line per material,
+* with quantity = number of serials scanned for it, the base unit of
+* measure from the material master (MARA-MEINS), and every serial of
+* that material assigned to the single line.
+*
+* EWM-related: ext_wms = '3' flags the posting as coming from an
+* external WMS; the EWM warehouse / GR-zone bin and the frame UII are
+* passed through on the item and serial rows.
+*
 * Defaults:
 *   From Plant = GM01, From SLOC = IP01
 *   To Plant   = GD01, To SLOC   = WF02
@@ -44,15 +53,13 @@ FUNCTION zmm_fm_post_gm301
          END OF ty_item,
          ty_items TYPE STANDARD TABLE OF ty_item WITH EMPTY KEY.
 
-  DATA: ls_header TYPE bapi2017_gm_head_01,
-        ls_code   TYPE bapi2017_gm_code,
-        ls_item   TYPE bapi2017_gm_item_create,
-        ls_serial TYPE bapi2017_gm_serialnumber,
-        lt_items  TYPE STANDARD TABLE OF bapi2017_gm_item_create,
-        lt_serial TYPE STANDARD TABLE OF bapi2017_gm_serialnumber,
-        lt_return TYPE STANDARD TABLE OF bapiret2,
-        lt_parsed TYPE ty_items,
-        lv_matdoc TYPE bapi2017_gm_head_ret-mat_doc,
+  DATA: ls_header  TYPE bapi2017_gm_head_01,
+        ls_code    TYPE bapi2017_gm_code,
+        lt_items   TYPE STANDARD TABLE OF bapi2017_gm_item_create,
+        lt_serial  TYPE STANDARD TABLE OF bapi2017_gm_serialnumber,
+        lt_return  TYPE STANDARD TABLE OF bapiret2,
+        lt_parsed  TYPE ty_items,
+        lv_matdoc  TYPE bapi2017_gm_head_ret-mat_doc,
         lv_matyear TYPE bapi2017_gm_head_ret-doc_year.
 
   CLEAR: ev_success, ev_message, ev_matdoc, ev_matyear.
@@ -71,42 +78,60 @@ FUNCTION zmm_fm_post_gm301
   ls_header-pstng_date = sy-datum.
   ls_header-doc_date   = sy-datum.
   ls_header-header_txt = '301 Acceptance'.
+  ls_header-ext_wms    = '3'.
 
   ls_code-gm_code = '04'.
 
-*---- 3. Build BAPI items and serial numbers ----------------------------*
-  DATA lv_line TYPE i VALUE 1.
+*---- 3. Group by material -> one item line per material ----------------*
+*        Quantity = number of serials in the group (GROUP SIZE)           *
+*        UoM      = material master base unit (MARA-MEINS)               *
+*        Every serial of the group is assigned to that one item line      *
+  DATA lv_line  TYPE i VALUE 0.
+  DATA lv_meins TYPE meins.
 
-  LOOP AT lt_parsed INTO DATA(ls_parsed).
-
-    CLEAR ls_item.
-    ls_item-material   = ls_parsed-material.
-    ls_item-plant      = 'GM01'.
-    ls_item-stge_loc   = 'IP01'.
-    ls_item-move_type  = '301'.
-    ls_item-entry_qnt  = '1'.
-    ls_item-entry_uom  = 'PC'.
-    ls_item-move_plant = 'GD01'.
-    ls_item-move_stloc = 'WF02'.
-    APPEND ls_item TO lt_items.
-
-    CLEAR ls_serial.
-    ls_serial-matdoc_itm = lv_line.
-    ls_serial-serialno   = ls_parsed-serialnumber.
-    APPEND ls_serial TO lt_serial.
+  LOOP AT lt_parsed INTO DATA(ls_parsed)
+       GROUP BY ( material = ls_parsed-material
+                  count    = GROUP SIZE )
+       INTO DATA(ls_group).
 
     lv_line = lv_line + 1.
+
+    " Base unit of measure from the material master
+    CLEAR lv_meins.
+    SELECT SINGLE meins FROM mara
+      WHERE matnr = @ls_group-material
+      INTO  @lv_meins.
+
+    " One movement line per material; quantity = number of serials
+    APPEND VALUE #( material      = ls_group-material
+                    plant         = 'GM01'
+                    stge_loc      = 'IP01'
+                    move_type     = '301'
+                    entry_qnt     = ls_group-count
+                    entry_uom     = lv_meins
+                    move_plant    = 'GD01'
+                    move_stloc    = 'WF02'
+                    move_mat      = ls_group-material
+                    stge_bin_ewm  = 'GR-ZONE'
+                    warehouse_ewm = iv_warehouse ) TO lt_items.
+
+    " One serial-number row per scan, all linked to this material line
+    LOOP AT GROUP ls_group INTO DATA(ls_member).
+      APPEND VALUE #( matdoc_itm = lv_line
+                      serialno   = ls_member-serialnumber
+                      uii        = ls_member-uii ) TO lt_serial.
+    ENDLOOP.
 
   ENDLOOP.
 
 *---- 4. Call BAPI ------------------------------------------------------*
   CALL FUNCTION 'BAPI_GOODSMVT_CREATE'
     EXPORTING
-      goodsmvt_header  = ls_header
-      goodsmvt_code    = ls_code
+      goodsmvt_header       = ls_header
+      goodsmvt_code         = ls_code
     IMPORTING
-      materialdocument = lv_matdoc
-      matdocumentyear  = lv_matyear
+      materialdocument      = lv_matdoc
+      matdocumentyear       = lv_matyear
     TABLES
       goodsmvt_item         = lt_items
       goodsmvt_serialnumber = lt_serial
@@ -120,7 +145,8 @@ FUNCTION zmm_fm_post_gm301
 
   IF lv_matdoc IS NOT INITIAL.
     CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
-      EXPORTING wait = abap_true.
+      EXPORTING
+        wait = abap_true.
 
     ev_success = abap_true.
     ev_matdoc  = lv_matdoc.

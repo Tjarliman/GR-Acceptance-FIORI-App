@@ -54,7 +54,9 @@ CLASS zcl_mm_qry_gracpt IMPLEMENTATION.
     ENDLOOP.
 
     IF lv_serial IS INITIAL.
-      lo_response->set_total_number_of_records( 0 ).
+      IF lo_request->is_total_numb_of_rec_requested( ).
+        lo_response->set_total_number_of_records( 0 ).
+      ENDIF.
       lo_response->set_data( lt_result ).
       RETURN.
     ENDIF.
@@ -82,12 +84,15 @@ CLASS zcl_mm_qry_gracpt IMPLEMENTATION.
     ENDIF.
 
     " Apply paging
-    DATA(lv_total) = lines( lt_result ).
-    lo_response->set_total_number_of_records( lv_total ).
+    IF lo_request->is_total_numb_of_rec_requested( ).
+      DATA lv_total TYPE int8.
+      lv_total = lines( lt_result ).
+      lo_response->set_total_number_of_records( lv_total ).
+    ENDIF.
 
-    DATA(ls_paging) = lo_request->get_paging( ).
-    DATA(lv_skip)   = ls_paging-offset.
-    DATA(lv_top)    = ls_paging-page_size.
+    DATA(lo_paging) = lo_request->get_paging( ).
+    DATA(lv_skip)   = lo_paging->get_offset( ).
+    DATA(lv_top)    = lo_paging->get_page_size( ).
 
     IF lv_skip > 0.
       DELETE lt_result FROM 1 TO lv_skip.

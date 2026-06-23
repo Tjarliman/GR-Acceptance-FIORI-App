@@ -14,9 +14,10 @@
 * CRxxx          XXXXXXX       DD-MMM-YYYY   xxxxx        XXXX
 *----------------------------------------------------------------------*
 unmanaged implementation in class ZCL_MM_BP_GRACPT unique;
-strict;
 
 define behavior for ZMM_I_GRACCEPTANCE alias SerialLookup
 {
+  field ( readonly ) SerialNumber;
+
   static action postGoodsMovement parameter ZMM_S_POST_GM301 result [1] $self;
 }
