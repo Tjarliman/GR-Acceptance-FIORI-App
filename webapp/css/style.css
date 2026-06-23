@@ -1,0 +1,17 @@
+.sapUiSmallMarginBottom {
+    margin-bottom: 0.5rem;
+}
+
+.warehouseInput {
+    max-width: 8rem;
+}
+
+.statusOK {
+    color: #2b7c2b;
+    font-weight: bold;
+}
+
+.statusError {
+    color: #cc1919;
+    font-weight: bold;
+}

@@ -1,0 +1,116 @@
+<mvc:View
+    controllerName="zmm.gracceptance.controller.Main"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:core="sap.ui.core">
+
+    <Page id="mainPage" title="{i18n>appTitle}" class="sapUiContentPadding">
+        <content>
+
+            <!-- Warehouse Number -->
+            <Panel class="sapUiSmallMarginBottom">
+                <content>
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="2" labelSpanL="2" labelSpanM="3" labelSpanS="12"
+                        emptySpanXL="6" emptySpanL="6" emptySpanM="4" emptySpanS="0"
+                        columnsXL="1" columnsL="1" columnsM="1">
+                        <form:content>
+                            <Label text="{i18n>warehouseNumber}" required="true" />
+                            <Input
+                                id="inputWarehouse"
+                                value="{local>/warehouseNumber}"
+                                placeholder="{i18n>warehousePlaceholder}"
+                                maxLength="4"
+                                class="warehouseInput" />
+                        </form:content>
+                    </form:SimpleForm>
+                </content>
+            </Panel>
+
+            <!-- Scan Inputs -->
+            <Panel class="sapUiSmallMarginBottom">
+                <content>
+                    <form:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="2" labelSpanL="2" labelSpanM="3" labelSpanS="12"
+                        emptySpanXL="2" emptySpanL="2" emptySpanM="0" emptySpanS="0"
+                        columnsXL="2" columnsL="2" columnsM="2">
+                        <form:content>
+                            <Label text="{i18n>serialNumber}" />
+                            <Input
+                                id="inputEngine"
+                                value="{local>/scanEngine}"
+                                placeholder="Scan engine barcode"
+                                submit="onEngineScan" />
+                            <Label text="{i18n>frameNumber}" />
+                            <Input
+                                id="inputFrame"
+                                value="{local>/scanFrame}"
+                                enabled="{= ${local>/lastEngine} !== '' }"
+                                placeholder="Scan frame barcode"
+                                submit="onFrameScan" />
+                        </form:content>
+                    </form:SimpleForm>
+                </content>
+            </Panel>
+
+            <!-- Scanned Items Table -->
+            <Table
+                id="scannedItemsTable"
+                items="{local>/scannedItems}"
+                growing="true"
+                growingThreshold="50"
+                noDataText="No items scanned yet.">
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Title text="Scanned Items ({= ${local>/scannedItems}.length })" level="H5" />
+                    </OverflowToolbar>
+                </headerToolbar>
+                <columns>
+                    <Column width="3rem"><Text text="{i18n>colNo}" /></Column>
+                    <Column><Text text="{i18n>colMaterial}" /></Column>
+                    <Column><Text text="{i18n>colDescription}" /></Column>
+                    <Column><Text text="{i18n>colSerialNumber}" /></Column>
+                    <Column><Text text="{i18n>colFrameNumber}" /></Column>
+                    <Column width="5rem" hAlign="Center"><Text text="{i18n>colStatus}" /></Column>
+                </columns>
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <Text text="{local>No}" />
+                            <Text text="{local>Material}" />
+                            <Text text="{local>MaterialDesc}" />
+                            <Text text="{local>SerialNumber}" />
+                            <Text text="{local>FrameNumber}" />
+                            <ObjectStatus
+                                text="{local>Status}"
+                                state="{= ${local>Status} === 'OK' ? 'Success' : 'Error' }" />
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+
+        </content>
+
+        <!-- Footer Toolbar: Clear + Post -->
+        <footer>
+            <OverflowToolbar>
+                <Button
+                    text="{i18n>btnClear}"
+                    type="Default"
+                    press="onClear" />
+                <ToolbarSpacer />
+                <Button
+                    text="{i18n>btnPost}"
+                    type="Emphasized"
+                    press="onPost"
+                    enabled="{= ${local>/scannedItems}.length > 0 }" />
+            </OverflowToolbar>
+        </footer>
+    </Page>
+
+</mvc:View>

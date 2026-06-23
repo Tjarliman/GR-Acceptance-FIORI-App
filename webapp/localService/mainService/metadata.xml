@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+  <edmx:DataServices>
+    <Schema Namespace="com.sap.gateway.srvd.zmmsd_gracceptance.v0001" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+
+      <EntityType Name="SerialLookupType">
+        <Key>
+          <PropertyRef Name="SerialNumber" />
+        </Key>
+        <Property Name="SerialNumber" Type="Edm.String" MaxLength="30" Nullable="false" />
+        <Property Name="WarehouseNumber" Type="Edm.String" MaxLength="4" />
+        <Property Name="Material" Type="Edm.String" MaxLength="40" />
+        <Property Name="MaterialDesc" Type="Edm.String" MaxLength="40" />
+        <Property Name="Uii" Type="Edm.String" MaxLength="72" />
+        <Property Name="Success" Type="Edm.Boolean" />
+        <Property Name="MaterialDocument" Type="Edm.String" MaxLength="10" />
+        <Property Name="MaterialDocYear" Type="Edm.String" MaxLength="4" />
+        <Property Name="Message" Type="Edm.String" />
+      </EntityType>
+
+      <ComplexType Name="PostGoodsMovementParameterType">
+        <Property Name="WarehouseNumber" Type="Edm.String" MaxLength="4" />
+        <Property Name="ItemsJson" Type="Edm.String" />
+      </ComplexType>
+
+      <Action Name="postGoodsMovement" IsBound="true">
+        <Parameter Name="_it" Type="Collection(com.sap.gateway.srvd.zmmsd_gracceptance.v0001.SerialLookupType)" Nullable="false" />
+        <Parameter Name="WarehouseNumber" Type="Edm.String" MaxLength="4" />
+        <Parameter Name="ItemsJson" Type="Edm.String" />
+        <ReturnType Type="com.sap.gateway.srvd.zmmsd_gracceptance.v0001.SerialLookupType" />
+      </Action>
+
+      <EntityContainer Name="EntityContainer">
+        <EntitySet Name="SerialLookup" EntityType="com.sap.gateway.srvd.zmmsd_gracceptance.v0001.SerialLookupType" />
+      </EntityContainer>
+
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>

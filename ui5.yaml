@@ -1,0 +1,19 @@
+specVersion: "3.0"
+metadata:
+  name: zmm.gracceptance
+type: application
+server:
+  customMiddleware:
+    - name: fiori-tools-proxy
+      afterMiddleware: compression
+      configuration:
+        ignoreCertError: true
+        backend:
+          - path: /sap
+            url: https://hpi-dev-app.hondaph.com:44300
+            client: "100"
+    - name: fiori-tools-appreload
+      afterMiddleware: compression
+      configuration:
+        port: 35729
+        path: webapp

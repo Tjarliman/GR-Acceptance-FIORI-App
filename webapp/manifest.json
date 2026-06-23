@@ -1,0 +1,122 @@
+{
+  "_version": "1.76.0",
+  "sap.app": {
+    "id": "zmm.gracceptance",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": {
+      "version": "0.0.1"
+    },
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "resources": "resources.json",
+    "dataSources": {
+      "mainService": {
+        "uri": "/sap/opu/odata4/sap/zmmsb_gracceptance/srvd/sap/zmmsd_gracceptance/0001/",
+        "type": "OData",
+        "settings": {
+          "localUri": "localService/mainService/metadata.xml",
+          "odataVersion": "4.0"
+        }
+      }
+    },
+    "crossNavigation": {
+      "inbounds": {
+        "zmm-gracceptance": {
+          "semanticObject": "GoodsMovement",
+          "action": "acceptance",
+          "title": "{{appTitle}}",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          }
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": {
+      "icon": "sap-icon://bar-code"
+    },
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": false
+    }
+  },
+  "sap.ui5": {
+    "flexEnabled": false,
+    "dependencies": {
+      "minUI5Version": "1.146.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.ui.layout": {},
+        "sap.f": {}
+      }
+    },
+    "contentDensities": {
+      "compact": true,
+      "cozy": true
+    },
+    "models": {
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": {
+          "bundleName": "zmm.gracceptance.i18n.i18n",
+          "supportedLocales": [""],
+          "fallbackLocale": ""
+        }
+      },
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": false
+        }
+      }
+    },
+    "resources": {
+      "css": [
+        { "uri": "css/style.css" }
+      ]
+    },
+    "rootView": {
+      "viewName": "zmm.gracceptance.view.App",
+      "type": "XML",
+      "async": true,
+      "id": "app"
+    },
+    "routing": {
+      "config": {
+        "routerClass": "sap.m.routing.Router",
+        "viewType": "XML",
+        "async": true,
+        "viewPath": "zmm.gracceptance.view",
+        "controlAggregation": "pages",
+        "controlId": "idAppControl"
+      },
+      "routes": [
+        {
+          "pattern": "",
+          "name": "Main",
+          "target": "Main"
+        }
+      ],
+      "targets": {
+        "Main": {
+          "viewName": "Main",
+          "viewId": "Main",
+          "viewLevel": 1
+        }
+      }
+    }
+  },
+  "sap.fiori": {
+    "registrationIds": [],
+    "archeType": "transactional"
+  }
+}

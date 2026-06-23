@@ -1,0 +1,20 @@
+*----------------------------------------------------------------------*
+* Project     : GR Acceptance
+* RICEFW ID   :
+* Description : Service definition for GR Acceptance
+* Program Name: ZMMSD_GRACCEPTANCE
+* Created By  : TRUSADI
+* Create Date : 23-06-2026
+* TR No.      :
+*----------------------------------------------------------------------*
+* Modification History
+*----------------------------------------------------------------------*
+* Defect/CR No.  Name          Date          Request No.  Description
+*----------------------------------------------------------------------*
+* CRxxx          XXXXXXX       DD-MMM-YYYY   xxxxx        XXXX
+*----------------------------------------------------------------------*
+@EndUserText.label: 'GR Acceptance Service'
+define service ZMMSD_GRACCEPTANCE
+{
+  expose ZMM_I_GRACCEPTANCE as SerialLookup;
+}
