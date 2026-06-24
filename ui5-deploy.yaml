@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=https://sap.github.io/ui5-tooling/schema/ui5.yaml.json
+
+specVersion: "4.0"
+metadata:
+  name: zmm.gracceptance
+type: application
+builder:
+  resources:
+    excludes:
+      - "/test/**"
+      - "/localService/**"
+  customTasks:
+    - name: deploy-to-abap
+      afterTask: replaceVersion
+      configuration:
+        target:
+          url: https://hpi-dev-app.hondaph.com:44300
+          client: 200
+          scp: false
+          authenticationType: basic
+          ignoreCertError: true
+        app:
+          name: ZMMUIGRACCEPT
+          description: GR Acceptance - Engine and Frame
+          package: Z001
+          transport: H4DK902720

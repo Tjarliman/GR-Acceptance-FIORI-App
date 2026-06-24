@@ -1,5 +1,8 @@
 node_modules/
 dist/
 .claude/
+.env
+.env.*
+archive.zip
 *.log
 .DS_Store
