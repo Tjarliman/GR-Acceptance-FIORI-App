@@ -75,11 +75,22 @@ CLASS zcl_mm_qry_gracpt IMPLEMENTATION.
         WHERE matnr = @ls_equi-matnr
           AND spras = @sy-langu.
 
+      " Block if the serial is already assigned in EWM (/SCWM/SERI)
+      DATA lv_conflict TYPE string.
+      CLEAR lv_conflict.
+      SELECT SINGLE serid FROM /scwm/seri
+        WHERE serid = @lv_serial
+        INTO @DATA(lv_seri_serid).
+      IF sy-subrc = 0.
+        lv_conflict = |Serial { lv_serial } is already assigned to another delivery.|.
+      ENDIF.
+
       APPEND VALUE #(
         serialnumber    = lv_serial
         warehousenumber = lv_warehouse
         material        = ls_equi-matnr
         materialdesc    = lv_maktx
+        message         = lv_conflict
       ) TO lt_result.
     ENDIF.
 

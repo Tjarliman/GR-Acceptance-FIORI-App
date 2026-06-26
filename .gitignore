@@ -3,6 +3,6 @@ dist/
 .claude/
 .env
 .env.*
-archive.zip
+*.zip
 *.log
 .DS_Store

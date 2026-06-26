@@ -48,6 +48,14 @@ sap.ui.define([
                 }
 
                 var oData = aContexts[0].getObject();
+
+                if (oData.Message) {
+                    MessageBox.error(oData.Message);
+                    this._oLocalModel.setProperty("/scanEngine", "");
+                    this.byId("inputEngine").focus();
+                    return;
+                }
+
                 this._oLocalModel.setProperty("/lastEngine", sEngine);
                 this._oLocalModel.setProperty("/lastMaterial", oData.Material);
                 this._oLocalModel.setProperty("/lastMaterialDesc", oData.MaterialDesc);
@@ -181,7 +189,7 @@ sap.ui.define([
 
                 if (oData.Success === true || oData.Success === "X") {
                     MessageBox.success(
-                        this._getText("msgPostSuccess", [oData.MaterialDocument, oData.MaterialDocYear]),
+                        this._getText("msgPostSuccess", [oData.MaterialDocument]),
                         {
                             onClose: function () {
                                 this._oLocalModel.setProperty("/scannedItems", []);
