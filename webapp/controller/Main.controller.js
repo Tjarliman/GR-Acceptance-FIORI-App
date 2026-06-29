@@ -13,6 +13,22 @@ sap.ui.define([
             this._oLocalModel = this.getOwnerComponent().getModel("local");
             this._oODataModel = this.getOwnerComponent().getModel();
             this._oLocalModel.setProperty("/lastEngine", "");
+            this._loadDefaultWarehouse();
+        },
+
+        // ─── Default warehouse from EWM parameter /SCWM/LGN ────────────
+        _loadDefaultWarehouse: function () {
+            var oBinding = this._oODataModel.bindList("/SerialLookup", undefined, undefined, undefined, {
+                $select: "SerialNumber,WarehouseNumber"
+            });
+            oBinding.requestContexts(0, 1).then(function (aContexts) {
+                var oObj = (aContexts && aContexts.length > 0) ? aContexts[0].getObject() : null;
+                if (oObj && oObj.WarehouseNumber) {
+                    this._oLocalModel.setProperty("/warehouseNumber", oObj.WarehouseNumber);
+                }
+            }.bind(this)).catch(function () {
+                // no default available - user can still type the warehouse
+            });
         },
 
         // ─── Engine Scan ───────────────────────────────────────────────

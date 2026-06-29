@@ -31,8 +31,8 @@
 * return table (msg id 'L9', number 514, MESSAGE_V1). Once the IBD is
 * committed, the Goods Receipt is posted for it by reusing the EWM
 * function module ZEWM_FM_POST_GR (same function group ZEWM_GR).
-* The EWM warehouse / GR-zone bin and the frame UII are still passed on
-* the item / serial rows.
+* Only the frame UII is passed on the serial rows; the EWM warehouse and
+* GR-zone bin are no longer sent on the item (EWM derives them on GR).
 *
 * Plant / storage locations are NOT hardcoded - they are read from the
 * parameter table ZCAT_USRPARAMD (ZZMODUL 'EWM', ZZPARAMID 'EWM-I-002',
@@ -146,9 +146,7 @@ FUNCTION zmm_fm_post_gm301
                     entry_uom     = lv_meins
                     move_plant    = ls_cfg-zzderval3
                     move_stloc    = ls_cfg-zzderval4
-                    move_mat      = ls_group-material
-                    stge_bin_ewm  = ls_cfg-zzderval5
-                    warehouse_ewm = iv_warehouse ) TO lt_items.
+                    move_mat      = ls_group-material ) TO lt_items.
 
     " One serial-number row per scan, all linked to this material line
     LOOP AT GROUP ls_group INTO DATA(ls_member).

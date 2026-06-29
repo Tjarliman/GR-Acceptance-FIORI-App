@@ -29,6 +29,13 @@ CLASS zcl_mm_qry_gracpt IMPLEMENTATION.
     DATA(lo_request) = io_request.
     DATA(lo_response) = io_response.
 
+    " RAP requires get_paging( ) to be called on EVERY path (even the
+    " early returns), else: "Query not fully covered by implementation:
+    " Call to method get_paging missing".
+    DATA(lo_paging) = lo_request->get_paging( ).
+    DATA(lv_skip)   = lo_paging->get_offset( ).
+    DATA(lv_top)    = lo_paging->get_page_size( ).
+
     TRY.
         DATA(lt_filter) = lo_request->get_filter( )->get_as_ranges( ).
       CATCH cx_rap_query_filter_no_range.
@@ -54,8 +61,16 @@ CLASS zcl_mm_qry_gracpt IMPLEMENTATION.
     ENDLOOP.
 
     IF lv_serial IS INITIAL.
+      " No serial -> return the user's default warehouse (param /SCWM/LGN)
+      " so the UI can pre-fill the Warehouse field on load.
+      DATA lv_def_wh TYPE /scwm/lgnum.
+      GET PARAMETER ID '/SCWM/LGN' FIELD lv_def_wh.
+      IF lv_def_wh IS NOT INITIAL.
+        APPEND VALUE #( serialnumber    = 'DEFAULT'
+                        warehousenumber = lv_def_wh ) TO lt_result.
+      ENDIF.
       IF lo_request->is_total_numb_of_rec_requested( ).
-        lo_response->set_total_number_of_records( 0 ).
+        lo_response->set_total_number_of_records( lines( lt_result ) ).
       ENDIF.
       lo_response->set_data( lt_result ).
       RETURN.
@@ -100,10 +115,6 @@ CLASS zcl_mm_qry_gracpt IMPLEMENTATION.
       lv_total = lines( lt_result ).
       lo_response->set_total_number_of_records( lv_total ).
     ENDIF.
-
-    DATA(lo_paging) = lo_request->get_paging( ).
-    DATA(lv_skip)   = lo_paging->get_offset( ).
-    DATA(lv_top)    = lo_paging->get_page_size( ).
 
     IF lv_skip > 0.
       DELETE lt_result FROM 1 TO lv_skip.
