@@ -45,7 +45,6 @@
                                 id="inputEngine"
                                 value="{local>/scanEngine}"
                                 placeholder="{i18n>scanEnginePlaceholder}"
-                                submit="onEngineScan"
                                 change="onEngineScan" />
                             <Label text="{i18n>uiiFrame}" />
                             <Input
@@ -53,7 +52,6 @@
                                 value="{local>/scanFrame}"
                                 enabled="{= ${local>/lastEngine} !== '' }"
                                 placeholder="{i18n>scanFramePlaceholder}"
-                                submit="onFrameScan"
                                 change="onFrameScan" />
                         </form:content>
                     </form:SimpleForm>
