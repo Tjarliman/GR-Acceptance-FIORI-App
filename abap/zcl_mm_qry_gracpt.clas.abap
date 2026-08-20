@@ -44,6 +44,7 @@ CLASS zcl_mm_qry_gracpt IMPLEMENTATION.
 
     DATA lv_serial    TYPE c LENGTH 30.
     DATA lv_warehouse TYPE c LENGTH 4.
+    DATA lv_uii       TYPE c LENGTH 72.
 
     LOOP AT lt_filter INTO DATA(ls_filter).
       CASE ls_filter-name.
@@ -56,6 +57,11 @@ CLASS zcl_mm_qry_gracpt IMPLEMENTATION.
           READ TABLE ls_filter-range INTO ls_range INDEX 1.
           IF sy-subrc = 0.
             lv_warehouse = ls_range-low.
+          ENDIF.
+        WHEN 'UII'.
+          READ TABLE ls_filter-range INTO ls_range INDEX 1.
+          IF sy-subrc = 0.
+            lv_uii = ls_range-low.
           ENDIF.
       ENDCASE.
     ENDLOOP.
@@ -77,7 +83,7 @@ CLASS zcl_mm_qry_gracpt IMPLEMENTATION.
     ENDIF.
 
     " Look up material from serial number via EQUI (equipment master)
-    SELECT SINGLE equnr, matnr, sernr
+    SELECT SINGLE equnr, matnr, sernr, uii
       FROM equi
       INTO @DATA(ls_equi)
       WHERE sernr = @lv_serial.
@@ -100,12 +106,31 @@ CLASS zcl_mm_qry_gracpt IMPLEMENTATION.
         lv_conflict = |Serial { lv_serial } is already assigned to another delivery.|.
       ENDIF.
 
+      " Validate the scanned UII against the equipment master record
+      " (EQUI-UII, already read above). Only run this check when the
+      " caller actually passed a UII to verify (the Frame-scan step) -
+      " an Engine-only lookup (no UII filter yet) must NOT trigger a
+      " mismatch against a blank value.
+      " NOTE: intentionally reading EQUI directly rather than calling
+      " FM SERIALNUMBER_READ - that FM is an interactive PM/EAM module
+      " (GUI-dependent branches, customer DFPS enhancement logic) and
+      " dumps when called from this RAP/OData $batch context.
+      DATA lv_uii_mismatch TYPE string.
+      CLEAR lv_uii_mismatch.
+
+      IF lv_uii IS NOT INITIAL AND ls_equi-uii <> lv_uii.
+        lv_uii_mismatch = |UII mismatch for serial { lv_serial }: expected { ls_equi-uii }.|.
+      ENDIF.
+
       APPEND VALUE #(
         serialnumber    = lv_serial
         warehousenumber = lv_warehouse
         material        = ls_equi-matnr
         materialdesc    = lv_maktx
-        message         = lv_conflict
+        uii             = ls_equi-uii
+        success         = COND #( WHEN lv_uii_mismatch IS INITIAL AND lv_conflict IS INITIAL
+                                   THEN abap_true ELSE abap_false )
+        message         = COND #( WHEN lv_uii_mismatch IS NOT INITIAL THEN lv_uii_mismatch ELSE lv_conflict )
       ) TO lt_result.
     ENDIF.
 

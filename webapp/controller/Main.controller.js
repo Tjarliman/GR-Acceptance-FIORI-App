@@ -90,6 +90,7 @@ sap.ui.define([
         onFrameScan: function () {
             var sFrame = this._oLocalModel.getProperty("/scanFrame").trim().toUpperCase();
             var sEngine = this._oLocalModel.getProperty("/lastEngine");
+            var sWarehouse = this._oLocalModel.getProperty("/warehouseNumber");
 
             if (!sEngine) {
                 MessageBox.error(this._getText("msgScanEngineFirst"));
@@ -99,27 +100,61 @@ sap.ui.define([
                 return;
             }
 
-            var aItems = this._oLocalModel.getProperty("/scannedItems") || [];
-            var iNextNo = aItems.length + 1;
+            this._oLocalModel.setProperty("/busy", true);
 
-            aItems.push({
-                No: iNextNo,
-                Material: this._oLocalModel.getProperty("/lastMaterial"),
-                MaterialDesc: this._oLocalModel.getProperty("/lastMaterialDesc"),
-                SerialNumber: sEngine,
-                FrameNumber: sFrame,
-                Status: "OK"
-            });
+            // Re-query with the scanned UII included so the backend can
+            // validate it (via SERIALNUMBER_READ / EQUI-UII) server-side.
+            var oListBinding = this._oODataModel.bindList("/SerialLookup", undefined, undefined, [
+                new Filter("SerialNumber", FilterOperator.EQ, sEngine),
+                new Filter("WarehouseNumber", FilterOperator.EQ, sWarehouse),
+                new Filter("Uii", FilterOperator.EQ, sFrame)
+            ]);
 
-            this._oLocalModel.setProperty("/scannedItems", aItems);
-            this._oLocalModel.setProperty("/scanEngine", "");
-            this._oLocalModel.setProperty("/scanFrame", "");
-            this._oLocalModel.setProperty("/lastEngine", "");
-            this._oLocalModel.setProperty("/lastMaterial", "");
-            this._oLocalModel.setProperty("/lastMaterialDesc", "");
+            oListBinding.requestContexts(0, 1).then(function (aContexts) {
+                this._oLocalModel.setProperty("/busy", false);
 
-            MessageToast.show(this._getText("msgFrameAdded"));
-            this.byId("inputEngine").focus();
+                if (!aContexts || aContexts.length === 0) {
+                    MessageBox.error(this._getText("msgEngineLookupFailed"));
+                    this._oLocalModel.setProperty("/scanFrame", "");
+                    this.byId("inputFrame").focus();
+                    return;
+                }
+
+                var oData = aContexts[0].getObject();
+
+                if (oData.Message) {
+                    MessageBox.error(oData.Message);
+                    this._oLocalModel.setProperty("/scanFrame", "");
+                    this.byId("inputFrame").focus();
+                    return;
+                }
+
+                var aItems = this._oLocalModel.getProperty("/scannedItems") || [];
+                var iNextNo = aItems.length + 1;
+
+                aItems.push({
+                    No: iNextNo,
+                    Material: oData.Material,
+                    MaterialDesc: oData.MaterialDesc,
+                    SerialNumber: sEngine,
+                    FrameNumber: sFrame,
+                    Status: "OK"
+                });
+
+                this._oLocalModel.setProperty("/scannedItems", aItems);
+                this._oLocalModel.setProperty("/scanEngine", "");
+                this._oLocalModel.setProperty("/scanFrame", "");
+                this._oLocalModel.setProperty("/lastEngine", "");
+                this._oLocalModel.setProperty("/lastMaterial", "");
+                this._oLocalModel.setProperty("/lastMaterialDesc", "");
+
+                MessageToast.show(this._getText("msgFrameAdded"));
+                this.byId("inputEngine").focus();
+            }.bind(this)).catch(function (oError) {
+                this._oLocalModel.setProperty("/busy", false);
+                MessageBox.error(this._getText("msgEngineLookupFailed") + "\n" + (oError.message || ""));
+                this._oLocalModel.setProperty("/scanFrame", "");
+            }.bind(this));
         },
 
         // ─── Delete Selected Item ────────────────────────────────────
@@ -205,7 +240,7 @@ sap.ui.define([
 
                 if (oData.Success === true || oData.Success === "X") {
                     MessageBox.success(
-                        this._getText("msgPostSuccess", [oData.MaterialDocument]),
+                        oData.Message || this._getText("msgPostSuccess", [oData.MaterialDocument]),
                         {
                             onClose: function () {
                                 this._oLocalModel.setProperty("/scannedItems", []);
